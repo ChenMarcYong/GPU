@@ -1,0 +1,3 @@
+/home/etudiants/kasheparov1/Bureau/gpu/tp3/ex2/out/CMakeFiles/Histogram.dir
+/home/etudiants/kasheparov1/Bureau/gpu/tp3/ex2/out/CMakeFiles/edit_cache.dir
+/home/etudiants/kasheparov1/Bureau/gpu/tp3/ex2/out/CMakeFiles/rebuild_cache.dir
