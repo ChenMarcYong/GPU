@@ -17,6 +17,8 @@
 #include "code/CPU/naive_viewsetCPU.hpp"
 #include "code/GPU/naive_viewsetGPU.hpp"
 
+#include "code/GPU/optimized_viewsetGPU.hpp"
+
 #define Cx 245				// (245, 497)
 #define Cy 497
 
@@ -98,12 +100,13 @@ int main(int argc, char **argv)
 	chrGPU.start();	
 
 
-	naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+	//naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+	optimized_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
 
 
 	chrGPU.stop();
 	timeAllocGPU = chrGPU.elapsedTime();
-	h_outGPU.saveTo("img/Result/GPU/LimousinGPU.ppm");
+	h_outGPU.saveTo("img/Result/GPU/LimousinGPU2.ppm");
 	
 	std::cout << "-> Done : " << std::fixed << std::setprecision(2) << timeAllocGPU << " ms en moyenne" << std::endl;
 
