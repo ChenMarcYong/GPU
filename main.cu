@@ -90,6 +90,7 @@ int main(int argc, char **argv)
     Heightmap h_inGPU("img/Input/1.input.ppm");			//1.input     limousin-full
     Heightmap h_outGPU(h_inGPU.getWidth(), h_inGPU.getHeight());
 	std::vector<float> angle(h_inGPU.getWidth() * h_inGPU.getHeight());
+	//float* angles = new float[h_inGPU.getWidth() * h_inGPU.getHeight()];
 	// data GPU
 	std::cout << h_inGPU.getWidth() << " " << h_inGPU.getHeight() << std::endl;
 	// GPU allocation

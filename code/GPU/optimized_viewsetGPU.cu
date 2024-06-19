@@ -22,7 +22,6 @@ __device__ float calculateAngleOptimizedGPU(float Dz, float Dx, float Dy)
 
 __device__ uint8_t DDAOptimizedGPU(int Px, int Py, const int Cx, const int Cy, const int MapWidth) 
 {
-{
     int Dx, Dy, D;  // delta
     Dx = Cx - Px;
     Dy = Cy - Py;
@@ -52,7 +51,7 @@ __device__ uint8_t DDAOptimizedGPU(int Px, int Py, const int Cx, const int Cy, c
         if (angleRef > angleDDA) return 0;
     }
     return 255;
-}
+
 }
 
 
@@ -95,7 +94,6 @@ __global__ void kernelAngleGPU(float *dev_angle,int Cx, int Cy, const int MapHei
 
             int Dz = dev_in_global[Cy * MapWidth + Cx] - dev_in_global[indexY * MapWidth + indexX];
             D = max(abs(Dx), abs(Dy));
-            float angleRef;
             dev_angle[indexY * MapWidth + indexX] = calculateAngleOptimizedGPU(Dz, Dx, Dy);
             indexX += gridDim.x * blockDim.x;
         }
@@ -119,7 +117,7 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
     HANDLE_ERROR(cudaMemcpy(dev_out, h_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
 
 
-    HANDLE_ERROR(cudaMemcpyToSymbol(dev_in_global, &dev_in, sizeof(uint8_t*)));
+    HANDLE_ERROR(cudaMemcpyToSymbol(dev_in_global, &dev_in, sizeof(uint8_t *)));
 
     int blocks_x = (MapWidth + ThrPerBlock_x - 1) / ThrPerBlock_x;
     int blocks_y = (MapHeight + ThrPerBlock_y - 1) / ThrPerBlock_y;
@@ -131,9 +129,9 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
 
     cudaDeviceSynchronize();
 
-    HANDLE_ERROR(cudaMemcpyToSymbol(angle_global, &dev_angle, sizeof(float*)));
+    HANDLE_ERROR(cudaMemcpyToSymbol(angle_global, &dev_angle, sizeof(float *)));
 
-    HANDLE_ERROR(cudaFree(dev_angle));
+    
 
 
     kernelOptimized_viewsetGPU<<<gridDim, blockDim>>>(dev_out, Cx, Cy, MapHeight, MapWidth);
@@ -142,6 +140,7 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
 
     HANDLE_ERROR(cudaFree(dev_in));
     HANDLE_ERROR(cudaFree(dev_out));
+    HANDLE_ERROR(cudaFree(dev_angle));
 
 }
 
