@@ -14,6 +14,9 @@
 #include "naive_viewtestGPU.hpp"
 #include "naive_tiledGPU.hpp"
 
+#include "code/CPU/naive_viewsetCPU.hpp"
+#include "code/GPU/naive_viewsetGPU.hpp"
+
 #define Cx 245				// (245, 497)
 #define Cy 497
 
@@ -36,13 +39,14 @@ int main(int argc, char **argv)
 
 
 
-    Heightmap h_inCPU("img/input/1.input.ppm");
+    Heightmap h_inCPU("img/Input/1.input.ppm");
     Heightmap h_outCPU(h_inCPU.getWidth(), h_inCPU.getHeight());
 
 	ChronoGPU chrCPU;
 	chrCPU.start();		// CPU method
-	drawMap3(h_inCPU.getPtr(), h_outCPU.getPtr(), h_inCPU.getWidth(), h_inCPU.getHeight(),  Cx, Cy);
-	//void drawMap(int *data,uint8_t *h_data, Heightmap h_out, const int MapSize, const int MapWidth, const int MapHeight,const int Cx,const int Cy)
+
+	naive_viewsetCPU(h_inCPU.getPtr(), h_outCPU.getPtr(), Cx, Cy, h_inCPU.getHeight(), h_inCPU.getWidth());
+
 	chrCPU.stop();
 	h_outCPU.saveTo("img/Result/CPU/LimousinCPU.ppm");
 	
@@ -51,15 +55,15 @@ int main(int argc, char **argv)
 	std::cout << "-> Done : " << std::fixed << std::setprecision(2) << timeComputeCPU << " ms" << std::endl
 			  << std::endl;
 
-    Heightmap h_inTiledCPU("img/input/1.input.ppm");
-	Heightmap tiled("img/input/3.tiled.ppm");
+    Heightmap h_inTiledCPU("img/Input/1.input.ppm");
+	Heightmap tiled("img/Input/3.tiled.ppm");
     Heightmap h_outTiledCPU(tiled.getWidth(), tiled.getHeight());
 	//std::cout << tiled.getWidth() << " " << tiled.getHeight() << std::endl;
 
 
 	ChronoGPU chrTiledCPU;
 	chrTiledCPU.start();		// CPU method
-	tiledMap(h_inTiledCPU.getPtr(), h_outTiledCPU.getPtr(), h_inTiledCPU.getWidth(), h_inTiledCPU.getHeight(), h_outTiledCPU.getWidth(), h_outTiledCPU.getHeight());			//void tiledMap(uint8_t *h_in, uint8_t *h_out,const int inMapWidth, const int inMapHeight , const int outMapWidth, const int outMapHeight)
+
 
 	chrTiledCPU.stop();
 	h_outTiledCPU.saveTo("img/Result/CPU/TiledCPU.ppm");
@@ -81,7 +85,7 @@ int main(int argc, char **argv)
 
 	// data GPU
 
-    Heightmap h_inGPU("img/input/1.input.ppm");			//1.input     limousin-full
+    Heightmap h_inGPU("img/Input/1.input.ppm");			//1.input     limousin-full
     Heightmap h_outGPU(h_inGPU.getWidth(), h_inGPU.getHeight());
 	std::vector<float> angle(h_inGPU.getWidth() * h_inGPU.getHeight());
 	// data GPU
@@ -92,8 +96,10 @@ int main(int argc, char **argv)
 	float timeAllocGPU;
 
 	chrGPU.start();	
-	carteGPUv1(h_inGPU.getPtr(), h_outGPU.getPtr(), h_inGPU.getWidth(), h_inGPU.getHeight(), Cx, Cy);
-	//carteGPUv1(h_inGPU.getPtr(), h_outGPU.getPtr(), angle.data(), h_inGPU.getWidth(), h_inGPU.getHeight(), Cx, Cy);
+
+
+	naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+
 
 	chrGPU.stop();
 	timeAllocGPU = chrGPU.elapsedTime();
@@ -106,7 +112,7 @@ int main(int argc, char **argv)
 
 
 
-	Heightmap h_inTiledGPU("img/input/1.input.ppm");
+	Heightmap h_inTiledGPU("img/Input/1.input.ppm");
     Heightmap h_outTiledGPU(TiledWidth, TiledHeight);
 
 	TiledGPU(h_inTiledGPU.getPtr(), h_outTiledGPU.getPtr(), h_inTiledGPU.getWidth(), h_inTiledGPU.getHeight() , h_outTiledGPU.getWidth(), h_outTiledGPU.getHeight());
@@ -120,7 +126,7 @@ int main(int argc, char **argv)
 	
 
 
-	for (int i = 0; i < h_inCPU.getHeight(); i++)
+	/*for (int i = 0; i < h_inCPU.getHeight(); i++)
 	{
 		for (int j = 0; j < h_inCPU.getWidth(); j++)
 			{
@@ -132,7 +138,7 @@ int main(int argc, char **argv)
 					return EXIT_FAILURE;
 				} 
 			}
-	}
+	}*/
 
 	return EXIT_SUCCESS;
 }
