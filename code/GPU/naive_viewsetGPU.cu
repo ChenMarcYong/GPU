@@ -20,10 +20,10 @@ __device__ float calculateAngleNaiveGPU(float Dz, float Dx, float Dy)
 __device__ uint8_t DDANaiveGPU(const uint8_t *dev_in, int Px, int Py, const int Cx, const int Cy, const int MapWidth)
 {
     int Dx, Dy, D;  // delta
-    Dx = Px - Cx;
-    Dy = Py - Cy;
+    Dx = Cx - Px;
+    Dy = Cy - Py;
 
-    int Dz = dev_in[Py * MapWidth + Px] - dev_in[Cy * MapWidth + Cx];
+    int Dz = dev_in[Cy * MapWidth + Cx] - dev_in[Py * MapWidth + Px];
     D = max(abs(Dx), abs(Dy));
     float angleRef;
     angleRef = calculateAngleNaiveGPU(Dz, Dx, Dy);
@@ -37,11 +37,11 @@ __device__ uint8_t DDANaiveGPU(const uint8_t *dev_in, int Px, int Py, const int 
     int DDAx, DDAy;
     for(int i = 0; i < D; i++)
     {
-        DDAx = Cx + i * stepX; 
-        DDAy = Cy + i * stepY;
-        Dx = Px - DDAx;
-        Dy = Py - DDAy;
-        Dz = dev_in[Py * MapWidth + Px] - dev_in[DDAy * MapWidth + DDAx];
+        DDAx = Px + i * stepX; 
+        DDAy = Py + i * stepY;
+        Dx = Cx - DDAx;
+        Dy = Cy - DDAy;
+        Dz = dev_in[Cy * MapWidth + Cx] - dev_in[DDAy * MapWidth + DDAx];
         //angleDDA = calculateAngleNaiveGPU(Dz, Dx, Dy);
         angleDDA = atan(Dz / __fsqrt_rn( (Dx * Dx) + (Dy * Dy)  )); 
 
