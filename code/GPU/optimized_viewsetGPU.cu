@@ -12,7 +12,7 @@ using namespace std;
 #define ThrPerBlock_x 8
 
 __device__ __constant__ uint8_t* dev_in_global;
-__device__ __constant__ uint8_t* angle_global;
+__device__ __constant__ float* angle_global;
 texture<uint8_t, cudaTextureType2D, cudaReadModeElementType> texIn; // améliore le temps d'éxécution même si on utilise juste cette ligne de code
 __device__ float calculateAngleOptimizedGPU(float Dz, float Dx, float Dy)
 {
@@ -26,11 +26,9 @@ __device__ uint8_t DDAOptimizedGPU(int Px, int Py, const int Cx, const int Cy, c
     Dx = Cx - Px;
     Dy = Cy - Py;
 
-    int Dz = dev_in_global[Cy * MapWidth + Cx] - dev_in_global[Py * MapWidth + Px];
     D = max(abs(Dx), abs(Dy));
     float angleRef;
-    angleRef = calculateAngleOptimizedGPU(Dz, Dx, Dy);
-    //angleRef = atan(Dz / __fsqrt_rn( (Dx * Dx) + (Dy * Dy)  )); 
+    angleRef = angle_global[Py * MapWidth + Px];
     float angleDDA;
 
     float stepX, stepY;
@@ -42,16 +40,11 @@ __device__ uint8_t DDAOptimizedGPU(int Px, int Py, const int Cx, const int Cy, c
     {
         DDAx = Px + i * stepX; 
         DDAy = Py + i * stepY;
-        Dx = Cx - DDAx;
-        Dy = Cy - DDAy;
-        Dz = dev_in_global[Cy * MapWidth + Cx] - dev_in_global[DDAy * MapWidth + DDAx];
-        //angleDDA = calculateAngleOptimizedGPU(Dz, Dx, Dy);
-        angleDDA = atan(Dz / __fsqrt_rn( (Dx * Dx) + (Dy * Dy)  )); 
+        angleDDA = angle_global[DDAy * MapWidth + DDAx]; 
 
         if (angleRef > angleDDA) return 0;
     }
     return 255;
-
 }
 
 
@@ -109,15 +102,17 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
     uint8_t *dev_in, *dev_out;
     float *dev_angle;
 
-    HANDLE_ERROR(cudaMalloc(&dev_in, sizeof(uint8_t) * MapHeight * MapWidth));
-    HANDLE_ERROR(cudaMalloc(&dev_out, sizeof(uint8_t) * MapHeight * MapWidth));
     HANDLE_ERROR(cudaMalloc(&dev_angle, sizeof(float) * MapHeight * MapWidth));
+    HANDLE_ERROR(cudaMalloc(&dev_in, sizeof(uint8_t) * MapHeight * MapWidth));
+    
+    
 
     HANDLE_ERROR(cudaMemcpy(dev_in, h_in, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(dev_out, h_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
+    
 
 
     HANDLE_ERROR(cudaMemcpyToSymbol(dev_in_global, &dev_in, sizeof(uint8_t *)));
+    
 
     int blocks_x = (MapWidth + ThrPerBlock_x - 1) / ThrPerBlock_x;
     int blocks_y = (MapHeight + ThrPerBlock_y - 1) / ThrPerBlock_y;
@@ -131,10 +126,12 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
 
     HANDLE_ERROR(cudaMemcpyToSymbol(angle_global, &dev_angle, sizeof(float *)));
 
-    
-
+    HANDLE_ERROR(cudaMalloc(&dev_out, sizeof(uint8_t) * MapHeight * MapWidth));
+    HANDLE_ERROR(cudaMemcpy(dev_out, h_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
 
     kernelOptimized_viewsetGPU<<<gridDim, blockDim>>>(dev_out, Cx, Cy, MapHeight, MapWidth);
+
+
 
     HANDLE_ERROR(cudaMemcpy(h_out, dev_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyDeviceToHost));
 
