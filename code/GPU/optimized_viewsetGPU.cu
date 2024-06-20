@@ -5,11 +5,15 @@
 
 #include "optimized_viewsetGPU.hpp"
 
+#include "../../utils/chronoGPU.hpp"
+
 
 
 using namespace std;
 #define ThrPerBlock_y 16
 #define ThrPerBlock_x 16
+#define NbIteration 1000
+
 
 __device__ __constant__ uint8_t* dev_in_global;
 __device__ __constant__ float* angle_global;
@@ -104,6 +108,7 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
 
     HANDLE_ERROR(cudaMalloc(&dev_angle, sizeof(float) * MapHeight * MapWidth));
     HANDLE_ERROR(cudaMalloc(&dev_in, sizeof(uint8_t) * MapHeight * MapWidth));
+    HANDLE_ERROR(cudaMalloc(&dev_out, sizeof(uint8_t) * MapHeight * MapWidth));
     
     HANDLE_ERROR(cudaMemcpy(dev_in, h_in, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpyToSymbol(dev_in_global, &dev_in, sizeof(uint8_t *)));
@@ -115,16 +120,22 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
     dim3 gridDim(blocks_x, blocks_y);
     dim3 blockDim(ThrPerBlock_x, ThrPerBlock_y);
 
-    kernelAngleGPU<<<gridDim, blockDim>>>(dev_angle, Cx, Cy, MapHeight, MapWidth);
+    ChronoGPU chrk1;
+    chrk1.start();
+	for (int i = 0; i < NbIteration; i++)
+	{
+        kernelAngleGPU<<<gridDim, blockDim>>>(dev_angle, Cx, Cy, MapHeight, MapWidth);
 
-    cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
 
-    HANDLE_ERROR(cudaMemcpyToSymbol(angle_global, &dev_angle, sizeof(float *)));
+        HANDLE_ERROR(cudaMemcpyToSymbol(angle_global, &dev_angle, sizeof(float *)));
 
-    HANDLE_ERROR(cudaMalloc(&dev_out, sizeof(uint8_t) * MapHeight * MapWidth));
-    HANDLE_ERROR(cudaMemcpy(dev_out, h_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
+        kernelOptimized_viewsetGPU<<<gridDim, blockDim>>>(dev_out, Cx, Cy, MapHeight, MapWidth);
+    }
+    chrk1.stop();
+    const float timeComputechrk1 = chrk1.elapsedTime();
+    printf("Done optimized_KernelviewsetGPU : %f ms\n", timeComputechrk1 / NbIteration);
 
-    kernelOptimized_viewsetGPU<<<gridDim, blockDim>>>(dev_out, Cx, Cy, MapHeight, MapWidth);
 
     HANDLE_ERROR(cudaMemcpy(h_out, dev_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyDeviceToHost));
 

@@ -5,11 +5,13 @@
 
 #include "naive_viewsetGPU.hpp"
 
-
+#include "../../utils/chronoGPU.hpp"
 
 using namespace std;
-#define ThrPerBlock_y 16
-#define ThrPerBlock_x 16
+#define ThrPerBlock_y 8
+#define ThrPerBlock_x 8
+
+#define NbIteration 1000
 
 __device__ float calculateAngleNaiveGPU(float Dz, float Dx, float Dy)
 {
@@ -78,7 +80,6 @@ void naive_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, const
     HANDLE_ERROR(cudaMalloc(&dev_out, sizeof(uint8_t) * MapHeight * MapWidth));
 
     HANDLE_ERROR(cudaMemcpy(dev_in, h_in, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(dev_out, h_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
 
 
     int blocks_x = (MapWidth + ThrPerBlock_x - 1) / ThrPerBlock_x;
@@ -87,7 +88,13 @@ void naive_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, const
     dim3 gridDim(blocks_x, blocks_y);
     dim3 blockDim(ThrPerBlock_x, ThrPerBlock_y);
 
-    kernelNaive_viewsetGPU<<<gridDim, blockDim >>>(dev_in, dev_out, Cx, Cy, MapHeight, MapWidth);
+
+    ChronoGPU chrk1;
+    chrk1.start();
+	for (int i = 0; i < NbIteration; i++) kernelNaive_viewsetGPU<<<gridDim, blockDim >>>(dev_in, dev_out, Cx, Cy, MapHeight, MapWidth);
+    chrk1.stop();
+    const float timeComputechrk1 = chrk1.elapsedTime();
+    printf("Done kernelTiled : %f ms\n", timeComputechrk1 / NbIteration);
 
     HANDLE_ERROR(cudaMemcpy(h_out, dev_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyDeviceToHost));
 

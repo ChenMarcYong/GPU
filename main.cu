@@ -18,12 +18,15 @@
 #include "code/GPU/naive_viewsetGPU.hpp"
 
 #include "code/GPU/optimized_viewsetGPU.hpp"
+#include "code/GPU/optimized2_viewsetGPU.hpp"
 
 #define Cx 245				// (245, 497)
 #define Cy 497
 
 #define TiledWidth 10
 #define TiledHeight 10
+
+
 
 int main(int argc, char **argv)
 {
@@ -43,6 +46,11 @@ int main(int argc, char **argv)
 
     Heightmap h_inCPU("img/Input/1.input.ppm");
     Heightmap h_outCPU(h_inCPU.getWidth(), h_inCPU.getHeight());
+
+
+	Heightmap hin("img/Input/limousin-full.ppm");
+
+	std::cout <<  hin.getWidth() << " : " << hin.getHeight() << std::endl;
 
 	ChronoGPU chrCPU;
 	chrCPU.start();		// CPU method
@@ -87,12 +95,13 @@ int main(int argc, char **argv)
 
 	// data GPU
 
-    Heightmap h_inGPU("img/Input/1.input.ppm");			//1.input     limousin-full
+    Heightmap h_inGPU("img/Input/limousin-full.ppm");			//1.input     limousin-full
     Heightmap h_outGPU(h_inGPU.getWidth(), h_inGPU.getHeight());
 	std::vector<float> angle(h_inGPU.getWidth() * h_inGPU.getHeight());
 	float* angles = new float[h_inGPU.getWidth() * h_inGPU.getHeight()];
 	// data GPU
 	std::cout << h_inGPU.getWidth() << " " << h_inGPU.getHeight() << std::endl;
+
 	// GPU allocation
 	ChronoGPU chrGPU;
 	float moy;
@@ -102,12 +111,9 @@ int main(int argc, char **argv)
 
 
 	
-	int it = 1;
-	for (int i = 0; i < it; i++)
-	{
-		//naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
-		optimized_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
-	} 
+
+	//naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+	optimized2_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
 	
 
 
@@ -115,7 +121,7 @@ int main(int argc, char **argv)
 	timeAllocGPU = chrGPU.elapsedTime();
 	h_outGPU.saveTo("img/Result/GPU/LimousinGPU2.ppm");
 	
-	std::cout << "-> Done : " << std::fixed << std::setprecision(2) << timeAllocGPU / it << " ms en moyenne" << std::endl;
+	std::cout << "-> Done : " << std::fixed << std::setprecision(2) << timeAllocGPU  << " ms en moyenne" << std::endl;
 
 
 	//-----------------------------------------// TiledGPU
