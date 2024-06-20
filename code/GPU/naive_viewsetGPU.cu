@@ -8,8 +8,8 @@
 
 
 using namespace std;
-#define ThrPerBlock_y 8
-#define ThrPerBlock_x 8
+#define ThrPerBlock_y 16
+#define ThrPerBlock_x 16
 
 __device__ float calculateAngleNaiveGPU(float Dz, float Dx, float Dy)
 {

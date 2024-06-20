@@ -9,7 +9,7 @@ using namespace std;
 
 float calculateAngle(float Dz, float Dx, float Dy)
 {
-    float dist = sqrt( (Dx) * (Dx) + (Dy) * (Dy));
+    float dist = sqrt((Dx) * (Dx) + (Dy) * (Dy));
     return atan(Dz / dist);
 }
 
@@ -19,7 +19,7 @@ uint8_t DDA(const uint8_t * h_in, int Px, int Py, const int Cx, const int Cy, co
     Dx = Px - Cx;
     Dy = Py - Cy;
 
-    int Dz = h_in[Py * MapWidth + Px] - h_in[Cy * MapWidth + Cx];
+    int Dz = h_in[Cy * MapWidth + Cx] - h_in[Py * MapWidth + Px];
     D = max(abs(Dx), abs(Dy));
     float angleRef;
     angleRef = calculateAngle(Dz, Dx, Dy);
@@ -35,9 +35,9 @@ uint8_t DDA(const uint8_t * h_in, int Px, int Py, const int Cx, const int Cy, co
     {
         DDAx = Cx + i * stepX; 
         DDAy = Cy + i * stepY;
-        Dx = Px - DDAx;
-        Dy = Py - DDAy;
-        Dz = h_in[Py * MapWidth + Px] - h_in[DDAy * MapWidth + DDAx];
+        Dx = Cx - DDAx;
+        Dy = Cy - DDAy;
+        Dz = h_in[Cy * MapWidth + Cx] - h_in[DDAy * MapWidth + DDAx];
         //angleDDA = calculateAngle(Dz, Dx, Dy);
         angleDDA = atan(Dz / sqrt( (Dx * Dx) + (Dy * Dy)  )); 
 

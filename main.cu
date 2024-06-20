@@ -101,15 +101,21 @@ int main(int argc, char **argv)
 	chrGPU.start();	
 
 
-	//naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
-	optimized_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+	
+	int it = 1;
+	for (int i = 0; i < it; i++)
+	{
+		//naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+		optimized_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+	} 
+	
 
 
 	chrGPU.stop();
 	timeAllocGPU = chrGPU.elapsedTime();
 	h_outGPU.saveTo("img/Result/GPU/LimousinGPU2.ppm");
 	
-	std::cout << "-> Done : " << std::fixed << std::setprecision(2) << timeAllocGPU << " ms en moyenne" << std::endl;
+	std::cout << "-> Done : " << std::fixed << std::setprecision(2) << timeAllocGPU / it << " ms en moyenne" << std::endl;
 
 
 	//-----------------------------------------// TiledGPU

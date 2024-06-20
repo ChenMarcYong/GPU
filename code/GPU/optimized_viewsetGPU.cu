@@ -8,8 +8,8 @@
 
 
 using namespace std;
-#define ThrPerBlock_y 8
-#define ThrPerBlock_x 8
+#define ThrPerBlock_y 16
+#define ThrPerBlock_x 16
 
 __device__ __constant__ uint8_t* dev_in_global;
 __device__ __constant__ float* angle_global;
@@ -70,7 +70,7 @@ __global__ void kernelOptimized_viewsetGPU(uint8_t *dev_out, int Cx, int Cy, con
     }
 }
 
-__global__ void kernelAngleGPU(float *dev_angle,int Cx, int Cy, const int MapHeight, const int MapWidth)
+__global__ void kernelAngleGPU(float *dev_angle, int Cx, int Cy, const int MapHeight, const int MapWidth)
 {
     int indexX = blockIdx.x * blockDim.x + threadIdx.x;
     int indexY = blockIdx.y * blockDim.y + threadIdx.y;
@@ -105,12 +105,7 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
     HANDLE_ERROR(cudaMalloc(&dev_angle, sizeof(float) * MapHeight * MapWidth));
     HANDLE_ERROR(cudaMalloc(&dev_in, sizeof(uint8_t) * MapHeight * MapWidth));
     
-    
-
     HANDLE_ERROR(cudaMemcpy(dev_in, h_in, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
-    
-
-
     HANDLE_ERROR(cudaMemcpyToSymbol(dev_in_global, &dev_in, sizeof(uint8_t *)));
     
 
@@ -130,8 +125,6 @@ void optimized_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, c
     HANDLE_ERROR(cudaMemcpy(dev_out, h_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyHostToDevice));
 
     kernelOptimized_viewsetGPU<<<gridDim, blockDim>>>(dev_out, Cx, Cy, MapHeight, MapWidth);
-
-
 
     HANDLE_ERROR(cudaMemcpy(h_out, dev_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyDeviceToHost));
 
