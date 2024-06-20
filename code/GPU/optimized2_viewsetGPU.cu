@@ -12,7 +12,7 @@
 using namespace std;
 #define ThrPerBlock_y 16
 #define ThrPerBlock_x 16
-#define NbIteration 1
+#define NbIteration 1000
 
 
 __device__ __constant__ uint8_t* dev_in_global;
@@ -24,15 +24,14 @@ __device__ float calculateAngleOptimized2GPU(float Dz, float Dx, float Dy)
     return atan(Dz / dist);
 }
 
-__device__ uint8_t DDAOptimized2GPU(int Px, int Py, const int Cx, const int Cy, const int MapWidth) 
+__device__ void DDAOptimized2GPU(uint8_t *dev_out, int Px, int Py, const int Cx, const int Cy, const int MapWidth) 
 {
     int Dx, Dy, D;  // delta
-    Dx = Cx - Px;
-    Dy = Cy - Py;
+    Dx = Px - Cx;
+    Dy = Py - Cy;
 
     D = max(abs(Dx), abs(Dy));
-    float angleRef;
-    angleRef = angle_global[Py * MapWidth + Px];
+    float angleMax = - M_PI/2;
     float angleDDA;
 
     float stepX, stepY;
@@ -40,15 +39,17 @@ __device__ uint8_t DDAOptimized2GPU(int Px, int Py, const int Cx, const int Cy, 
     stepY = (float(Dy) / D);
 
     int DDAx, DDAy;
-    for(int i = 0; i < D; i++)
+    for(int i = 0; i <= D; i++)
     {
-        DDAx = Px + i * stepX; 
-        DDAy = Py + i * stepY;
+        DDAx = Cx + i * stepX; 
+        DDAy = Cy + i * stepY;
         angleDDA = angle_global[DDAy * MapWidth + DDAx]; 
-
-        if (angleRef > angleDDA) return 0;
+        if (angleMax < angleDDA)
+        {
+            dev_out[DDAy * MapWidth + DDAx] = 255;
+            angleMax = angleDDA;
+        } 
     }
-    return 255;
 }
 
 
@@ -61,11 +62,15 @@ __global__ void kernelOptimized2_viewsetGPU(uint8_t *dev_out, int Cx, int Cy, co
     int indexY = blockIdx.y * blockDim.y + threadIdx.y;
     int initX = indexX;
 
-    while (indexY < MapHeight)
+    while (indexY <= MapHeight)
     {
-        while (indexX < MapWidth)
+        while (indexX <= MapWidth)
         {
-            dev_out[indexY * MapWidth + indexX] = DDAOptimized2GPU(indexX, indexY, Cx, Cy, MapWidth);
+            if (indexX == 0 || indexY == 0 || indexX == MapWidth || indexY == MapHeight)
+            {
+                DDAOptimized2GPU(dev_out, indexX, indexY, Cx, Cy, MapWidth);
+            }
+            
             indexX += gridDim.x * blockDim.x;
         }
 
@@ -84,13 +89,12 @@ __global__ void kernelAngle2GPU(float *dev_angle, int Cx, int Cy, const int MapH
     {
         while (indexX < MapWidth)
         {
+            
+            int Dx, Dy;  // delta
+            Dx = indexX - Cx;
+            Dy = indexY - Cy;
 
-            int Dx, Dy, D;  // delta
-            Dx = Cx - indexX;
-            Dy = Cy - indexY;
-
-            int Dz = dev_in_global[Cy * MapWidth + Cx] - dev_in_global[indexY * MapWidth + indexX];
-            D = max(abs(Dx), abs(Dy));
+            int Dz = dev_in_global[indexY * MapWidth + indexX] - dev_in_global[Cy * MapWidth + Cx];
             dev_angle[indexY * MapWidth + indexX] = calculateAngleOptimized2GPU(Dz, Dx, Dy);
             indexX += gridDim.x * blockDim.x;
         }
@@ -134,7 +138,7 @@ void optimized2_viewsetGPU(const uint8_t *h_in, uint8_t *h_out, int Cx, int Cy, 
     }
     chrk1.stop();
     const float timeComputechrk1 = chrk1.elapsedTime();
-    printf("Done optimized_KernelviewsetGPU : %f ms\n", timeComputechrk1 / NbIteration);
+    printf("Done optimized2_KernelviewsetGPU : %f ms\n", timeComputechrk1 / NbIteration);
 
 
     HANDLE_ERROR(cudaMemcpy(h_out, dev_out, sizeof(uint8_t) * MapHeight * MapWidth, cudaMemcpyDeviceToHost));

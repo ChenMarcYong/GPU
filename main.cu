@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
 	// data GPU
 
-    Heightmap h_inGPU("img/Input/limousin-full.ppm");			//1.input     limousin-full
+    Heightmap h_inGPU("img/Input/1.input.ppm");			//1.input     limousin-full
     Heightmap h_outGPU(h_inGPU.getWidth(), h_inGPU.getHeight());
 	std::vector<float> angle(h_inGPU.getWidth() * h_inGPU.getHeight());
 	float* angles = new float[h_inGPU.getWidth() * h_inGPU.getHeight()];

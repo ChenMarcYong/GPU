@@ -12,7 +12,7 @@
 using namespace std;
 #define ThrPerBlock_y 16
 #define ThrPerBlock_x 16
-#define NbIteration 1000
+#define NbIteration 1
 
 
 __device__ __constant__ uint8_t* dev_in_global;
@@ -61,9 +61,9 @@ __global__ void kernelOptimized_viewsetGPU(uint8_t *dev_out, int Cx, int Cy, con
     int indexY = blockIdx.y * blockDim.y + threadIdx.y;
     int initX = indexX;
 
-    while (indexY < MapHeight)
+    while (indexY <= MapHeight)
     {
-        while (indexX < MapWidth)
+        while (indexX <= MapWidth)
         {
             dev_out[indexY * MapWidth + indexX] = DDAOptimizedGPU(indexX, indexY, Cx, Cy, MapWidth);
             indexX += gridDim.x * blockDim.x;
@@ -90,7 +90,6 @@ __global__ void kernelAngleGPU(float *dev_angle, int Cx, int Cy, const int MapHe
             Dy = Cy - indexY;
 
             int Dz = dev_in_global[Cy * MapWidth + Cx] - dev_in_global[indexY * MapWidth + indexX];
-            D = max(abs(Dx), abs(Dy));
             dev_angle[indexY * MapWidth + indexX] = calculateAngleOptimizedGPU(Dz, Dx, Dy);
             indexX += gridDim.x * blockDim.x;
         }
