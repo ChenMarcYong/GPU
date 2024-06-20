@@ -36,14 +36,14 @@ __global__ void kernelTiled(uint8_t *h_in, uint8_t *h_out,const int inMapWidth, 
 }
 
 
-void TiledGPU(uint8_t *h_in, uint8_t *h_out,const int inMapWidth, const int inMapHeight , const int outMapWidth, const int outMapHeight)
+void TiledGPU(uint8_t *h_in, uint8_t *h_out,const int inMapWidth, const int inMapHeight , const int TileDimX, const int TileDimY)
 {
     ChronoGPU chrGPU;
     uint8_t *dev_h_in;
     uint8_t *dev_h_out;
 
-    size_t sizeIn = inMapWidth * inMapWidth * sizeof(uint8_t);
-    size_t sizeOut = outMapWidth * outMapWidth * sizeof(uint8_t);
+    size_t sizeIn = inMapWidth * inMapHeight * sizeof(uint8_t);
+    size_t sizeOut = TileDimX * TileDimY * sizeof(uint8_t);
 
     cudaMalloc((void**) &dev_h_in, sizeIn);
     cudaMalloc((void**) &dev_h_out, sizeOut);
@@ -51,14 +51,12 @@ void TiledGPU(uint8_t *h_in, uint8_t *h_out,const int inMapWidth, const int inMa
     cudaMemcpy(dev_h_in, h_in, sizeIn, cudaMemcpyHostToDevice);
     
 
-    int blocks_x = (inMapWidth + ThrPerBlock_x - 1) / ThrPerBlock_x;
-    int blocks_y = (inMapHeight + ThrPerBlock_y - 1) / ThrPerBlock_y;
 
-    dim3 gridDim(10, 10);
+    dim3 gridDim(TileDimX, TileDimY);
     dim3 blockDim(ThrPerBlock_x, ThrPerBlock_y);
     ChronoGPU chrk1;
     chrk1.start();
-    kernelTiled<<<gridDim, blockDim>>>(dev_h_in, dev_h_out, inMapWidth, inMapHeight, outMapWidth, outMapHeight);
+    kernelTiled<<<gridDim, blockDim>>>(dev_h_in, dev_h_out, inMapWidth, inMapHeight, TileDimX, TileDimY);
     chrk1.stop();
 
 	const float timeComputechrk1 = chrk1.elapsedTime();

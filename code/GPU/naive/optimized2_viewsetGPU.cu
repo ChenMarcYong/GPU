@@ -5,7 +5,7 @@
 
 #include "optimized2_viewsetGPU.hpp"
 
-#include "../../utils/chronoGPU.hpp"
+#include "../../../utils/chronoGPU.hpp"
 
 
 
@@ -17,7 +17,6 @@ using namespace std;
 
 __device__ __constant__ uint8_t* dev_in_global;
 __device__ __constant__ float* angle_global;
-texture<uint8_t, cudaTextureType2D, cudaReadModeElementType> texIn; // améliore le temps d'éxécution même si on utilise juste cette ligne de code
 __device__ float calculateAngleOptimized2GPU(float Dz, float Dx, float Dy)
 {
     float dist = sqrt( (Dx) * (Dx) + (Dy) * (Dy));

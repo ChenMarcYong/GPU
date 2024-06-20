@@ -15,10 +15,12 @@
 #include "naive_tiledGPU.hpp"
 
 #include "code/CPU/naive_viewsetCPU.hpp"
-#include "code/GPU/naive_viewsetGPU.hpp"
+#include "code/GPU/naive/naive_viewsetGPU.hpp"
 
-#include "code/GPU/optimized_viewsetGPU.hpp"
-#include "code/GPU/optimized2_viewsetGPU.hpp"
+#include "code/GPU/naive/optimized_viewsetGPU.hpp"
+#include "code/GPU/naive/optimized2_viewsetGPU.hpp"
+
+#include "code/GPU/tiled/naive_tiledGPU.hpp"
 
 #define Cx 245				// (245, 497)
 #define Cy 497
@@ -56,6 +58,7 @@ int main(int argc, char **argv)
 	chrCPU.start();		// CPU method
 
 	naive_viewsetCPU(h_inCPU.getPtr(), h_outCPU.getPtr(), Cx, Cy, h_inCPU.getHeight(), h_inCPU.getWidth());
+	
 
 	chrCPU.stop();
 	h_outCPU.saveTo("img/Result/CPU/LimousinCPU.ppm");
@@ -97,6 +100,7 @@ int main(int argc, char **argv)
 
     Heightmap h_inGPU("img/Input/1.input.ppm");			//1.input     limousin-full
     Heightmap h_outGPU(h_inGPU.getWidth(), h_inGPU.getHeight());
+	Heightmap h_outTileGPU(TiledWidth, TiledHeight);
 	std::vector<float> angle(h_inGPU.getWidth() * h_inGPU.getHeight());
 	float* angles = new float[h_inGPU.getWidth() * h_inGPU.getHeight()];
 	// data GPU
@@ -113,13 +117,14 @@ int main(int argc, char **argv)
 	
 
 	//naive_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
-	optimized2_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
-	
+	//optimized_viewsetGPU(h_inGPU.getPtr(), h_outGPU.getPtr(), Cx, Cy, h_inGPU.getHeight(), h_inGPU.getWidth());
+	naive_tiledGPU(h_inGPU.getPtr(), h_outTileGPU.getPtr(), h_inGPU.getWidth(), h_inGPU.getHeight(), TiledWidth, TiledHeight);
+	//(h_inTiledGPU.getPtr(), h_outTiledGPU.getPtr(), h_inTiledGPU.getWidth(), h_inTiledGPU.getHeight() , h_outTiledGPU.getWidth(), h_outTiledGPU.getHeight());
 
 
 	chrGPU.stop();
 	timeAllocGPU = chrGPU.elapsedTime();
-	h_outGPU.saveTo("img/Result/GPU/LimousinGPU2.ppm");
+	h_outTileGPU.saveTo("img/Result/GPU/Tiled.ppm");
 	
 	std::cout << "-> Done : " << std::fixed << std::setprecision(2) << timeAllocGPU  << " ms en moyenne" << std::endl;
 

@@ -1,8 +1,8 @@
 #ifndef __OPTIMIZED_VIEWSET_GPU__
 #define __OPTIMIZED_VIEWSET_GPU__
 
-#include "../../los/ppm.hpp"
-#include "../../utils/commonCUDA.hpp"
+#include "../../../los/ppm.hpp"
+#include "../../../utils/commonCUDA.hpp"
 
 using namespace los;
 

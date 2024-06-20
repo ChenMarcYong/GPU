@@ -5,13 +5,13 @@
 
 #include "naive_viewsetGPU.hpp"
 
-#include "../../utils/chronoGPU.hpp"
+#include "../../../utils/chronoGPU.hpp"
 
 using namespace std;
 #define ThrPerBlock_y 8
 #define ThrPerBlock_x 8
 
-#define NbIteration 1000
+#define NbIteration 1
 
 __device__ float calculateAngleNaiveGPU(float Dz, float Dx, float Dy)
 {
